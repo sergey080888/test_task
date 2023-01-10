@@ -17,6 +17,7 @@ class Parser:
         # Динамические поля (переменные объекта)
         self.url = url
         self.HEADERS = HEADERS
+        self.making_country_dict()
 
 
     def text_parsing(self):
@@ -117,7 +118,8 @@ class Parser:
         #         params = {'arrestWarrantCountryId': b, 'nationality': a[i - len(a) + 1], 'resultPerPage': 161}
         #         print(params)
         for i, country_id in enumerate(self.make_json()):
-            params = {'arrestWarrantCountryId': country_id, 'nationality': self.make_json()[i-len(self.make_json())], 'resultPerPage': 161}
+            params = {'arrestWarrantCountryId': country_id, 'nationality': self.make_json()[i-len(self.make_json())],
+                      'resultPerPage': 161}
             response = requests.get("https://ws-public.interpol.int/notices/v1/red", params=params, headers=HEADERS)
             self.super_count += 1
 
