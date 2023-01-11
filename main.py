@@ -24,11 +24,11 @@ class Parser:
         # Динамические поля (переменные объекта)
         self.url = url
         self.headers = headers
+        self.get_total()
         self.making_country_dict()
         self.param_maker()
         self.make_dir()
         self.make_json()
-
 
     def text_parsing(self):
         response = requests.get(self.url, self.headers)
@@ -115,7 +115,6 @@ class Parser:
                     response = requests.get(url, params=(params | params_4) | param_name, headers=headers)
                     wanted_list = response.json()['_embedded']['notices']
                     self.json_saving(wanted_list, country_id)
-
             else:
                 wanted_list = response.json()['_embedded']['notices']
                 self.json_saving(wanted_list, country_id)
@@ -128,12 +127,14 @@ class Parser:
             #     # print(f'make_json- wanted_list-->{wanted_list}')
             #     self.json_saving(wanted_list, country_id)
 
-        print(f'super_param--> {self.super_param}')
         return self.super_param
 
+    def get_total(self):
+        response = requests.get("https://ws-public.interpol.int/notices/v1/red", headers=self.headers)
+        print(f'Необходимо загрузить {response.json()["total"]}')
+        return
 
     def make_json(self):
-
         for country_id in self.countries_dict:
 
             url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
@@ -152,6 +153,7 @@ class Parser:
         print(f'Загрузка обьектов {self.super_count} шт. заверешена')
         return
 
+
     # def big_json(self, country_id):
     #     for age in range(18, 121):
     #         url = "https://ws-public.interpol.int/notices/v1/red"
@@ -160,9 +162,6 @@ class Parser:
     #         wanted_list = requests.get(url, params=params, headers=headers).json()['_embedded']['notices']
     #         self.json_saving(wanted_list, country_id)
     #         print(wanted_list)
-
-
-
 if __name__ == '__main__':
     if os.path.isdir('red_notice'):
         shutil.rmtree('red_notice')
