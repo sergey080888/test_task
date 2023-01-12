@@ -1,5 +1,6 @@
 from pprint import pprint
-
+import threading
+import time
 import os, shutil
 import requests, json
 import bs4
@@ -16,12 +17,10 @@ class Parser:
     super_count = 0
     countries_dict = {}
     big_wanted_list = []
-    big_wanted_list_2 = []
     super_param = []
     param_list = []
 
     def __init__(self, url, headers):
-        # Динамические поля (переменные объекта)
         self.url = url
         self.headers = headers
         self.get_total()
@@ -37,6 +36,11 @@ class Parser:
         print('text_parsing')
         return soup
 
+    def get_total(self):
+        response = requests.get("https://ws-public.interpol.int/notices/v1/red", headers=self.headers)
+        print(f'Необходимо загрузить {response.json()["total"]}')
+        return
+
    # словарь со странами
     def making_country_dict(self):
         countries = self.text_parsing().find(id="arrestWarrantCountryId").find_all('option')
@@ -44,9 +48,15 @@ class Parser:
         for country in countries:
             self.countries_dict[(str(country)).partition('"')[2].partition('"')[0]] = country.text
         self.countries_dict.pop('')
-        print('Словарь стран создан')
+        print(f'Словарь стран создан-->{self.countries_dict}')
         return
 
+    def param_maker(self):
+        latin_string = 'qwertyuiopasdfghjklzxcvbnm'
+        for symbol in latin_string:
+            param = {'name': symbol}
+            self.param_list.append(param)
+        return self.param_list
 # # словарь национальностей#
 #     def making_nationality_dict(self):
 #         nationalities = self.text_parsing().find(id="nationality").find_all('option')
@@ -79,13 +89,23 @@ class Parser:
                 with open(file_url, 'w') as f:
                     json.dump(red_notice, f)
                     self.super_count += 1
+    def make_json(self):
+        for country_id in self.countries_dict:
+            url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
+                   f"&resultPerPage=161"
+            response = requests.get(url, headers=self.headers)
+            if response.json()['total'] <= 160:
+                wanted_list = response.json()['_embedded']['notices']
+                # print(f'make_json- wanted_list-->{wanted_list}')
+                self.json_saving(wanted_list, country_id)
+            else:
+                self.big_wanted_list.append(response.json()['query']['arrestWarrantCountryId'])
+        # print(f'make_json --> {self.big_wanted_list}')
+        for country in self.big_wanted_list:
+            self.big_json(country)
+        print(f'Загрузка обьектов {self.super_count} шт. заверешена')
+        return
 
-    def param_maker(self):
-        latin_string = 'qwertyuiopasdfghjklzxcvbnm'
-        for symbol in latin_string:
-            param = {'name': symbol}
-            self.param_list.append(param)
-        return self.param_list
 
     def big_json(self, country_id):
         print(f'Загружаютя файлы из {self.countries_dict[country_id]}')
@@ -103,12 +123,13 @@ class Parser:
             response = requests.get(url, params=params | params_3, headers=headers)
             if response.json()['total'] > 160:
                 for param_name in self.param_list:
-                    response = requests.get(url, params=(params | params_4) | param_name, headers=headers)
+                    response = requests.get(url, params=(params | params_3) | param_name, headers=headers)
                     wanted_list = response.json()['_embedded']['notices']
                     self.json_saving(wanted_list, country_id)
             else:
                 wanted_list = response.json()['_embedded']['notices']
                 self.json_saving(wanted_list, country_id)
+
             response = requests.get(url, params=params | params_4, headers=headers)
             if response.json()['total'] > 160:
                 for param_name in self.param_list:
@@ -118,6 +139,8 @@ class Parser:
             else:
                 wanted_list = response.json()['_embedded']['notices']
                 self.json_saving(wanted_list, country_id)
+
+
             # url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
             #       f"&resultPerPage=161"
             #
@@ -128,32 +151,6 @@ class Parser:
             #     self.json_saving(wanted_list, country_id)
 
         return self.super_param
-
-    def get_total(self):
-        response = requests.get("https://ws-public.interpol.int/notices/v1/red", headers=self.headers)
-        print(f'Необходимо загрузить {response.json()["total"]}')
-        return
-
-    def make_json(self):
-        for country_id in self.countries_dict:
-
-            url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
-                   f"&resultPerPage=161"
-
-            response = requests.get(url, headers=self.headers)
-            if response.json()['total'] <= 160:
-                wanted_list = response.json()['_embedded']['notices']
-                # print(f'make_json- wanted_list-->{wanted_list}')
-                self.json_saving(wanted_list, country_id)
-            else:
-                self.big_wanted_list.append(response.json()['query']['arrestWarrantCountryId'])
-        # print(f'make_json --> {self.big_wanted_list}')
-        for country in self.big_wanted_list:
-            self.big_json(country)
-        print(f'Загрузка обьектов {self.super_count} шт. заверешена')
-        return
-
-
     # def big_json(self, country_id):
     #     for age in range(18, 121):
     #         url = "https://ws-public.interpol.int/notices/v1/red"
@@ -163,8 +160,9 @@ class Parser:
     #         self.json_saving(wanted_list, country_id)
     #         print(wanted_list)
 if __name__ == '__main__':
+    start = time.time()
     if os.path.isdir('red_notice'):
         shutil.rmtree('red_notice')
-
     a = Parser(url_1, HEADERS)
-    # print(a)
+    end = time.time()
+    print(f'Время загрузки {(end-start)/60}мин')
