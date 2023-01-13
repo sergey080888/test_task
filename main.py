@@ -1,8 +1,8 @@
 import time
 import os
 import shutil
-
-from classes import ParserRed, ParserYellow
+from classes import ParserRed
+from yellow import ParserYellow
 
 url_1 = 'https://www.interpol.int/How-we-work/Notices/View-Red-Notices'
 url_2 = 'https://www.interpol.int/How-we-work/Notices/View-Yellow-Notices'
@@ -18,10 +18,12 @@ if __name__ == '__main__':
         shutil.rmtree('red_notice')
     a = ParserRed(url_1, HEADERS)
     end = time.time()
-    print(f'Время загрузки {round((end-start,2)/60)}мин')
+    print(f'Время загрузки {round(((end-start)/60),2)}мин')
+
+
     # start = time.time()
     # if os.path.isdir('yellow_notice'):
     #     shutil.rmtree('yellow_notice')
     # b = ParserYellow(url_2, HEADERS)
     # end = time.time()
-    # print(f'Время загрузки {round(end-start,2)/60}мин')
+    # print(f'Время загрузки {round(((end-start)/60),2)}мин')

@@ -5,7 +5,7 @@ import json
 import bs4
 
 
-class ParserRed:
+class ParserYellow:
     super_count = 0
     countries_dict = {}
     big_wanted_list = []
@@ -29,16 +29,16 @@ class ParserRed:
         return soup
 
     def get_total(self):
-        url = "https://ws-public.interpol.int/notices/v1/red"
+        url = "https://ws-public.interpol.int/notices/v1/yellow"
         response = requests.get(url, headers=self.headers)
         print(f'Необходимо загрузить {response.json()["total"]}')
         return
 
    # словарь со странами
     def making_country_dict(self):
-        id_ = "arrestWarrantCountryId"
+        id_ = "nationality"
         countries = self.text_parsing().find(id=id_).find_all('option')
-        # print(countries)
+        print(countries)
         for country in countries:
             self.countries_dict[(str(country)).partition('"')[2].partition('"')[0]] = country.text
         self.countries_dict.pop('')
@@ -54,7 +54,7 @@ class ParserRed:
 
     # создание папки для сохранения
     def make_dir(self):
-        name_dir = "red_notice"
+        name_dir = "yellow_notice"
         os.mkdir(name_dir)
         for country in self.countries_dict.values():
             dir_path = os.path.join(os.getcwd(), name_dir, country)
@@ -67,7 +67,7 @@ class ParserRed:
     def json_saving(self, list_, id_):
         for red_notice in list_:
             file_name = f'{red_notice["entity_id"].replace("/", "_")}.json'
-            directory = 'red_notice'
+            directory = 'yellow_notice'
             sub_dir = self.countries_dict[id_]
             file_url = os.path.join(os.getcwd(), directory, sub_dir, file_name)
             if not os.path.isfile(file_url):
@@ -77,15 +77,15 @@ class ParserRed:
 
     def make_json(self):
         for country_id in self.countries_dict:
-            url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
-                   f"&resultPerPage=161"
+            url = f"https://ws-public.interpol.int/notices/v1/yellow?&nationality={country_id}" \
+                   f"&resultPerPage=160"
             response = requests.get(url, headers=self.headers)
             if response.json()['total'] <= 160:
                 wanted_list = response.json()['_embedded']['notices']
                 # print(f'make_json- wanted_list-->{wanted_list}')
                 self.json_saving(wanted_list, country_id)
             else:
-                self.big_wanted_list.append(response.json()['query']['arrestWarrantCountryId'])
+                self.big_wanted_list.append(response.json()['query']['nationality'])
         # print(f'make_json --> {self.big_wanted_list}')
         # for country in self.big_wanted_list:
         #     self.big_json(country)
@@ -104,7 +104,7 @@ class ParserRed:
 
     def big_json(self, country_id):
         print(f'Загружаютя файлы из {self.countries_dict[country_id]}')
-        url = "https://ws-public.interpol.int/notices/v1/red"
+        url = "https://ws-public.interpol.int/notices/v1/yellow"
         headers = self.headers
         params = {'ageMin': 0, 'ageMax': 120, 'arrestWarrantCountryId': country_id, 'resultPerPage': 160}
         params_2 = {'sexId': 'U'}
@@ -112,7 +112,7 @@ class ParserRed:
         wanted_list = response.json()['_embedded']['notices']
         self.json_saving(wanted_list, country_id)
 
-        for age in range(18, 120):
+        for age in range(0, 116):
             params_3 = {'sexId': 'F', 'ageMin': age, 'ageMax': age}
             params_4 = {'sexId': 'M', 'ageMin': age, 'ageMax': age}
             response = requests.get(url, params=params | params_3, headers=headers)
@@ -134,23 +134,4 @@ class ParserRed:
             else:
                 wanted_list = response.json()['_embedded']['notices']
                 self.json_saving(wanted_list, country_id)
-
-
-            # url = f"https://ws-public.interpol.int/notices/v1/red?&arrestWarrantCountryId={country_id}" \
-            #       f"&resultPerPage=161"
-            #
-            # response = requests.get(url, headers=self.headers)
-            # if response.json()['total'] <= 160:
-            #     wanted_list = response.json()['_embedded']['notices']
-            #     # print(f'make_json- wanted_list-->{wanted_list}')
-            #     self.json_saving(wanted_list, country_id)
-
         return self.super_param
-    # def big_json(self, country_id):
-    #     for age in range(18, 121):
-    #         url = "https://ws-public.interpol.int/notices/v1/red"
-    #         params = {'ageMin': age, 'ageMax': age, 'arrestWarrantCountryId': country_id, 'resultPerPage': 161}
-    #         headers = self.headers
-    #         wanted_list = requests.get(url, params=params, headers=headers).json()['_embedded']['notices']
-    #         self.json_saving(wanted_list, country_id)
-    #         print(wanted_list)
