@@ -12,12 +12,12 @@ HEADERS = {
     }
 
 if __name__ == '__main__':
-    # start = time.time()
-    # if os.path.isdir('red_notice'):
-    #     shutil.rmtree('red_notice')
-    # a = ParserRed(url_1, HEADERS)
-    # end = time.time()
-    # print(f'Время загрузки {round(((end-start)/60),2)}мин')
+    start = time.time()
+    if os.path.isdir('red_notice'):
+        shutil.rmtree('red_notice')
+    a = ParserRed(url_1, HEADERS)
+    end = time.time()
+    print(f'Время загрузки {round(((end-start)/60),2)}мин')
 
     #
 
