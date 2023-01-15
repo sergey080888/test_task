@@ -18,6 +18,9 @@ if __name__ == '__main__':
     # a = ParserRed(url_1, HEADERS)
     # end = time.time()
     # print(f'Время загрузки {round(((end-start)/60),2)}мин')
+
+    #
+
     start = time.time()
     if os.path.isdir('yellow_notice'):
         shutil.rmtree('yellow_notice')

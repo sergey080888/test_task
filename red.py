@@ -19,15 +19,14 @@ class ParserRed:
         self.making_country_dict()
         self.param_maker()
         self.make_dir()
-        self.finding_withoutage_country()
-        self.make_json()
-
-        # make_json_thr = threading.Thread(target=self.make_json)
-        # make_json_thr.start()
-        # withoutage_thr = threading.Thread(target=self.finding_withoutage_country)
-        # withoutage_thr.start()
-        # make_json_thr.join()
-        # withoutage_thr.join()
+        # self.finding_withoutage_country()
+        # self.make_json()
+        withoutage_thr = threading.Thread(target=self.finding_withoutage_country)
+        withoutage_thr.start()
+        make_json_thr = threading.Thread(target=self.make_json)
+        make_json_thr.start()
+        withoutage_thr.join()
+        make_json_thr.join()
 
     def finding_withoutage_country(self):
         url = "https://ws-public.interpol.int/notices/v1/red"
